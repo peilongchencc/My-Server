@@ -178,7 +178,7 @@ ssh deployer@your_server_ip
 - 查找(`ll -a`)一个名为`.ssh`的目录。如果没有，可以使用下列命令来创建这个目录:
 
 ```bash
-mkdir -p ~/.ssh`
+mkdir -p ~/.ssh
 ```
 
 - 在`.ssh`目录中，有一个名为`authorized_keys`的文件用于存储公钥。如果该文件不存在，你可以创建它。例如:
@@ -244,9 +244,13 @@ vim ~/.ssh/id_ed25519
 chmod 600 ~/.ssh/id_ed25519
 ```
 
-设置git个人信息，以笔者为例:
+设置Git个人信息，以笔者为例:
 
 ```bash
+# 可选，安装Git
+apt-get update
+apt install git
+# 设置Git个人信息
 git config --global user.name "peilongchencc"
 git config --global user.email "peilongchencc@163.com"
 ```
