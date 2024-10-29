@@ -5,6 +5,7 @@ Git LFS 是一种 Git 扩展，用于管理大型文件，通常用于版本控�
   - [前言:](#前言)
     - [读者疑惑:](#读者疑惑)
     - [笔者系统:](#笔者系统)
+    - [Git Lfs 版本查看:](#git-lfs-版本查看)
   - [Git LFS的安装:](#git-lfs的安装)
   - [使用示例--下载模型:](#使用示例--下载模型)
     - [1. 初始化 Git LFS:](#1-初始化-git-lfs)
@@ -23,10 +24,31 @@ Git LFS 是一种 Git 扩展，用于管理大型文件，通常用于版本控�
 
 - Ubuntu 22.04
 
+### Git Lfs 版本查看:
+
+输入以下命令来检查 Git LFS 是否已安装：
+
+```bash
+git lfs --version
+```
+
+如果 Git LFS 已安装，此命令将输出已安装的 Git LFS 版本，例如：
+
+```log
+git-lfs/3.0.2 (GitHub; linux amd64; go 1.18.1)
+```
+
+如果 Git LFS 未安装，提示类似以下信息：
+
+```log
+git：'lfs' 不是一个 git 命令。参见 'git --help'。
+
+最相似的命令是
+        log
+```
+
 
 ## Git LFS的安装:
-
-终端输入下列指令:
 
 ```bash
 sudo apt update
