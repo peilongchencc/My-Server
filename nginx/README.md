@@ -14,10 +14,13 @@ Nginx（发音为“engine X”）是一个开源的、高性能的Web服务器�
   - [Nginx配置项的选择:](#nginx配置项的选择)
     - [情况描述:](#情况描述)
     - [具体解释:](#具体解释)
-    - [为个人服务配置域名时的Nginx配置:](#为个人服务配置域名时的nginx配置)
-      - [情况描述:](#情况描述-1)
-      - [解决方案:](#解决方案)
-    - [前端dist文件利用nginx起服务:](#前端dist文件利用nginx起服务)
+  - [示例:通过域名访问个人服务:](#示例通过域名访问个人服务)
+    - [前提:](#前提)
+    - [1. **创建或修改配置文件**：](#1-创建或修改配置文件)
+    - [2. **检查配置文件语法并重载Nginx配置**：](#2-检查配置文件语法并重载nginx配置)
+    - [3. **验证**:](#3-验证)
+    - [拓展: `/chat`目录的代理](#拓展-chat目录的代理)
+  - [前端dist文件利用nginx起服务:](#前端dist文件利用nginx起服务)
       - [其他注意事项](#其他注意事项)
       - [如果服务要迁移，前端dist文件要如何处理:](#如果服务要迁移前端dist文件要如何处理)
   - [Nginx的基本使用：](#nginx的基本使用)
@@ -115,34 +118,28 @@ sudo service nginx stop
 
 ## 让Nginx重新加载配置:
 
-如果你修改了Nginx的配置文件，为了让Nginx重新加载配置，你可以使用以下命令:<br>
-
-```bash
-sudo systemctl reload nginx
-```
-
-🚨但重新加载配置前需要先检查你的配置语法是否正确:<br>
+🚨重新加载配置前需要先检查你的配置语法是否正确:
 
 ```bash
 sudo nginx -t
 ```
 
-如果配置文件中没有语法错误，你将会看到类似以下内容的输出：<br>
+如果配置文件中没有语法错误，你将会看到类似以下内容的输出：
 
 ```bash
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 ```
 
-如果存在语法错误，它们会被显示出来，你需要根据错误信息来修复配置文件。<br>
+如果存在语法错误，它们会被显示出来，你需要根据错误信息来修复配置文件。
 
-🔥如果配置文件语法没有问题，重新加载Nginx配置，使更改生效即可：<br>
+🔥如果配置文件语法没有问题，重新加载Nginx配置，使更改生效即可:
 
 ```bash
 sudo systemctl reload nginx
 ```
 
-上面的指令用于不关闭 Nginx 的情况使修改后的配置文件生效。如果你的 Nginx 没有运行，直接启动它等于相同的效果：<br>
+上面的指令用于不关闭 Nginx 的情况使修改后的配置文件生效。如果你的 Nginx 没有运行，直接启动它等于相同的效果:
 
 ```bash
 sudo systemctl start nginx
@@ -153,11 +150,11 @@ sudo systemctl start nginx
 
 ### 情况描述:
 
-有些人说修改nginx配置需要修改 `/etc/nginx/nginx.conf`，有些人说要要在 `/etc/nginx/conf.d/` 添加自己的配置。不同的选择，总会让人很懵。那这两个人谁说的对呢？是有不同场景的使用限制吗？<br>
+有些人说修改nginx配置需要修改 `/etc/nginx/nginx.conf`，有些人说要要在 `/etc/nginx/conf.d/` 添加自己的配置。不同的选择，总会让人很懵。那这两个人谁说的对呢？是有不同场景的使用限制吗？
 
 ### 具体解释:
 
-你的疑惑很正常，因为Nginx的配置文件有不同的层级和用途，具体使用哪个文件修改配置取决于你的需求和场景。下面是对这几种文件的解释及其使用场景：<br>
+你的疑惑很正常，因为Nginx的配置文件有不同的层级和用途，具体使用哪个文件修改配置取决于你的需求和场景。下面是对这几种文件的解释及其使用场景:
 
 1. **`/etc/nginx/nginx.conf`**:
 
@@ -177,27 +174,30 @@ sudo systemctl start nginx
 
 - 适用场景：根据个人或组织的习惯，配置文件可以放在不同的目录中，以便于管理和维护。例如，在Debian/Ubuntu系统中，通常使用`/etc/nginx/sites-available/`和`/etc/nginx/sites-enabled/`目录。
 
-### 为个人服务配置域名时的Nginx配置:
+> `/etc/nginx/sites-enabled/`用于配置快捷方式。
 
-#### 情况描述:
 
-我为我的服务器配置了一个域名(peilongchencc.cn)，我想要把这个域名和`http://localhost:7860`绑定，我该配置哪个呢？配置好后，`http://localhost:7860/chat`会是什么情况？<br>
+## 示例:通过域名访问个人服务:
 
-#### 解决方案:
+### 前提:
 
-为了将你的域名 `peilongchencc.cn` 绑定到 `http://localhost:7860`，你需要在 Nginx 中配置一个反向代理。具体来说，你可以在 `/etc/nginx/conf.d/` 目录下创建一个新的配置文件，或在已有的配置文件中添加相应的配置。具体操作如下:<br>
+- 域名已申请(peilongchencc.cn)
+- 已准备好后端程序，程序接口为`http://localhost:7860`和`http://localhost:7860/chat`。
+- Nginx这个域名需要和`http://localhost:7860`、`http://localhost:7860/chat`绑定。
 
-1. **创建或修改配置文件**：
+### 1. **创建或修改配置文件**：
 
 在 `/etc/nginx/conf.d/` 目录下创建一个新的配置文件，例如 `peilongchencc.cn.conf`：<br>
+
+> 也可使用`/etc/nginx/sites-available/`。
 
 ```bash
 sudo vim /etc/nginx/conf.d/peilongchencc.cn.conf
 ```
 
-然后在文件中添加以下配置：<br>
+然后在文件中添加以下配置:
 
-```nginx
+```conf
 server {
     listen 80;
     server_name peilongchencc.cn;
@@ -212,33 +212,33 @@ server {
 }
 ```
 
-这个配置将把所有对 `peilongchencc.cn` 的请求代理到 `http://localhost:7860`。<br>
+这个配置将把所有对 `peilongchencc.cn` 的请求代理到 `http://localhost:7860`。
 
-2. **检查配置文件语法**：
+### 2. **检查配置文件语法并重载Nginx配置**：
 
-在终端中运行以下命令以检查 Nginx 配置文件的语法：<br>
+在终端中运行以下命令以检查 Nginx 配置文件的语法。语法检查通过后，重载 Nginx 配置以应用新的更改:
 
 ```bash
+# 检查Nginx配置语法正确性
 sudo nginx -t
-```
-
-如果没有错误，将显示类似于 `syntax is ok` 和 `test is successful` 的信息。<br>
-
-3. **重载 Nginx 配置**：
-
-语法检查通过后，重载 Nginx 配置以应用新的更改：<br>
-
-```bash
+# 重载Nginx配置(非重启服务)
 sudo systemctl reload nginx
 ```
 
-4. **验证**:
+### 3. **验证**:
 
-配置完成后，你可以在浏览器中访问 `http://peilongchencc.cn`。Nginx 会将请求代理到 `http://localhost:7860`。同样，访问 `http://peilongchencc.cn/chat` 会被代理到 `http://localhost:7860/chat`。
+配置完成后，你可以在浏览器中访问 `http://peilongchencc.cn`。Nginx 会将请求代理到 `http://localhost:7860`。
 
-> 基本上配置 Nginx 只需要将你的域名 `peilongchencc.cn` 代理到 `localhost` 和相应的端口即可。
+### 拓展: `/chat`目录的代理
 
-### 前端dist文件利用nginx起服务:
+完成上述Nginx配置后，访问 `http://peilongchencc.cn/chat` 会被代理到 `http://localhost:7860/chat`。
+
+原因:
+
+`location /` 表示匹配所有以 `/` 开头的请求路径。因此，无论是访问 `http://peilongchencc.cn` 还是 `http://peilongchencc.cn/chat`，Nginx 都会将请求代理到 http://localhost:7860，并且会将请求的完整路径（例如 `/chat`）一并转发到后端。
+
+
+## 前端dist文件利用nginx起服务:
 
 前端的`dist`文件通常是前端项目打包后的静态资源文件，需要通过Nginx进行托管和访问。为此，你可以在Nginx的配置文件中设置一个服务器块（server block）来处理这些静态文件。通常，这类配置文件会放在`/etc/nginx/conf.d/`目录下。<br>
 
@@ -279,15 +279,10 @@ server {
 
 3. **检查配置文件语法并重启Nginx**：
 
-在添加或修改配置文件后，检查配置文件的语法是否正确：<br>
-
 ```bash
+# 检查配置文件的语法是否正确
 sudo nginx -t
-```
-
-如果没有错误，重新加载Nginx配置：<br>
-
-```bash
+# 重新加载Nginx配置
 sudo systemctl reload nginx
 ```
 

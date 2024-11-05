@@ -23,7 +23,23 @@
       - [解决方案:](#解决方案)
     - [Certbot 写入 Nginx 的操作含义(可跳过)：](#certbot-写入-nginx-的操作含义可跳过)
     - [验证SSL证书是否有效(可选):](#验证ssl证书是否有效可选)
-  - [Nginx配置:](#nginx配置)
+  - [Nginx示例:](#nginx示例)
+    - [Nginx示例--通过域名启动前端服务:](#nginx示例--通过域名启动前端服务)
+      - [1. 从前端获取静态资源(dist.zip):](#1-从前端获取静态资源distzip)
+      - [2. dist.zip放到指定位置并解压:](#2-distzip放到指定位置并解压)
+      - [3. 为域名获取SSL证书:](#3-为域名获取ssl证书)
+      - [4. 创建Nginx配置文件:](#4-创建nginx配置文件)
+      - [5. 编辑Nginx配置:](#5-编辑nginx配置)
+      - [6. 配置软链接到 `sites-enabled`:](#6-配置软链接到-sites-enabled)
+      - [7. 检查Nginx配置文件的语法并重载Nginx配置:](#7-检查nginx配置文件的语法并重载nginx配置)
+      - [8. 打开网页测试效果:](#8-打开网页测试效果)
+    - [Nginx示例--通过域名启动前端服务(多域名重定向版本):](#nginx示例--通过域名启动前端服务多域名重定向版本)
+      - [通过 Certbot 一次性为这些子域名生成 SSL 证书:](#通过-certbot-一次性为这些子域名生成-ssl-证书)
+      - [修改Nginx配置文件:](#修改nginx配置文件)
+      - [配置软链接到`sites-enabled`(如果已配置请跳过):](#配置软链接到sites-enabled如果已配置请跳过)
+      - [检查Nginx配置文件的语法并重载Nginx配置:](#检查nginx配置文件的语法并重载nginx配置)
+      - [打开网页测试多域名重定向效果:](#打开网页测试多域名重定向效果)
+    - [Nginx示例--Websockets服务配置:](#nginx示例--websockets服务配置)
     - [Websockets服务的Nginx配置:](#websockets服务的nginx配置)
       - [1. 为个人域名创建Nginx配置文件:](#1-为个人域名创建nginx配置文件)
       - [2. 添加配置:](#2-添加配置)
@@ -31,9 +47,7 @@
       - [1. 为个人域名创建Nginx配置文件:](#1-为个人域名创建nginx配置文件-1)
       - [2. 添加配置:](#2-添加配置-1)
     - [配置软链接到 `sites-enabled`:](#配置软链接到-sites-enabled)
-    - [检查配置文件的语法并重载Nginx配置:](#检查配置文件的语法并重载nginx配置)
-      - [1. 检查配置文件的语法是否正确:](#1-检查配置文件的语法是否正确)
-      - [2. 重新加载Nginx配置:](#2-重新加载nginx配置)
+      - [检查Nginx配置文件的语法并重载Nginx配置:](#检查nginx配置文件的语法并重载nginx配置-1)
   - [关闭公网IP访问方式:](#关闭公网ip访问方式)
   - [前端dist文件借助Nginx启动服务(可选):](#前端dist文件借助nginx启动服务可选)
     - [前提条件:](#前提条件)
@@ -188,14 +202,24 @@ sudo apt install certbot python3-certbot-nginx
 
 ```bash
 # 不使用 certonly 更适合希望简单快捷地部署 HTTPS 的用户，让 Certbot 自动完成所有步骤。
-sudo certbot --nginx -d www.peilongchencc.cn
+# 最终访问效果: https://peilongchencc.cn
+sudo certbot --nginx -d peilongchencc.cn
 ```
 
 2. 如果你希望 Certbot 只获取证书，并且自行配置 Nginx，使用 `certonly` 选项。(笔者使用的方式)
 
 ```bash
 # 使用 certonly 更适合那些有特定需求的用户，比如你需要手动配置、使用不同的证书管理工具，或者你不希望 Certbot 自动修改 Nginx 配置。
-sudo certbot certonly --nginx -d www.peilongchencc.cn
+# 最终访问效果: https://peilongchencc.cn
+sudo certbot certonly --nginx -d peilongchencc.cn
+```
+
+3. 如果你的网址涉及重定向，可以通过 Certbot 一次性为这些子域名生成 SSL 证书:
+
+```bash
+# 多个域名共享同一张SSL证书，从而简化管理和部署。
+# 最终访问效果: 用户访问 https://www.peilongchencc.cn、https://chatbot.peilongchencc.cn 都重定向到 https://peilongchencc.cn
+sudo certbot certonly --nginx -d peilongchencc.cn -d www.peilongchencc.cn -d chatbot.peilongchencc.cn
 ```
 
 💢注意: 如果你的服务器没有打开80和443端口，是无法使用 Cerbot 获取SSL证书的。
@@ -205,13 +229,13 @@ sudo certbot certonly --nginx -d www.peilongchencc.cn
 🌈获得的SSL证书和链文件固定保存在 `/etc/letsencrypt/live` 路径，例如:
 
 ```bash
-(langchain) root@iZ2ze50qtwycx9cbbvesvxZ:/project# cd /etc/letsencrypt/live
-(langchain) root@iZ2ze50qtwycx9cbbvesvxZ:/etc/letsencrypt/live# ll
+(langchain) root@iZ2ze50qtwycx:/project# cd /etc/letsencrypt/live
+(langchain) root@iZ2ze50qtwycx:/etc/letsencrypt/live# ll
 total 20
 drwx------ 4 root root 4096 Sep  4 13:41 ./
 drwxr-xr-x 9 root root 4096 Sep  4 13:41 ../
 -rw-r--r-- 1 root root  740 Sep  4 13:35 README
-drwxr-xr-x 2 root root 4096 Sep  4 13:41 www.peilongchencc.cn/
+drwxr-xr-x 2 root root 4096 Sep  4 13:41 peilongchencc.cn/
 drwxr-xr-x 2 root root 4096 Sep  4 13:41 sys-custom.peilongchencc.cn/
 drwxr-xr-x 2 root root 4096 Sep  4 13:35 sys-user.peilongchencc.cn/
 (langchain) root@iZ2ze50qtwycx9cbbvesvxZ:/etc/letsencrypt/live# 
@@ -293,11 +317,230 @@ openssl s_client -connect peilongchencc.cn:443 -servername peilongchencc.cn
 这将连接到你的服务器并显示 SSL 证书的详细信息，包括证书链和任何错误。<br>
 
 
-## Nginx配置:
+## Nginx示例:
 
-假设现在你已经配好了域名(`www.peilongchencc.cn`)，并申请了SSL证书。要实现域名和后端服务连接，还需要在`sites-available`中写入配置文件。
+假设现在你已经配好了域名，并申请了SSL证书。要实现域名和 **前端(dist.zip)** 或 **后端** 服务连接，还需要在`sites-available`中写入配置文件。
 
-🚨由于笔者的代码是基于Gradio实现的，Gradio 的 `demo.launch()` 使用 WebSocket 来实现流式响应，而 Nginx 默认不支持 WebSocket，需要专门配置以允许 WebSocket 连接。
+### Nginx示例--通过域名启动前端服务:
+
+#### 1. 从前端获取静态资源(dist.zip):
+
+如果和你合作的前端直接在服务器操作，可以直接连接他的前端服务，可以跳过当前操作。
+
+#### 2. dist.zip放到指定位置并解压:
+
+将获取到的 `dist.zip` 放到服务器指定位置，例如 `/project/front`。
+
+```bash
+# 解压文件
+unzip dist.zip
+# 文件改名，改一个适合项目场景的名字
+mv dist webhome
+```
+
+#### 3. 为域名获取SSL证书:
+
+如果你已经为域名获取了证书，可跳过当前步骤。
+
+```bash
+# 使用 certonly 更适合那些有特定需求的用户，比如你需要手动配置、使用不同的证书管理工具，或者你不希望 Certbot 自动修改 Nginx 配置。
+# 最终访问效果: https://peilongchencc.cn
+sudo certbot certonly --nginx -d peilongchencc.cn
+```
+
+#### 4. 创建Nginx配置文件:
+
+一般以要访问的`server_name`作为文件名，这样方便记忆:
+
+```bash
+# 可以创建快捷方式(笔者选择的方式)
+vim /etc/nginx/sites-available/peilongchencc.cn
+```
+
+如果你在`/etc/nginx/conf.d/`目录下进行Nginx配置创建，则写法如下:
+
+```bash
+# 需要以`.conf`结尾，其他后缀的文件无法识别
+vim /etc/nginx/conf.d/webhome.conf
+```
+
+#### 5. 编辑Nginx配置:
+
+假设你已经为`peilongchencc.com`申请了SSL证书，在上一步的基础上写入下列内容:
+
+```conf
+server {
+    listen 80;  # 监听 80 端口，处理 HTTP 请求
+    server_name peilongchencc.com;  # 指定服务器域名
+
+    # 将所有 HTTP 请求重定向到 HTTPS 版本
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl;  # 监听 443 端口，处理 HTTPS 请求
+    server_name peilongchencc.com;  # 指定服务器域名
+
+    # SSL 证书文件路径
+    ssl_certificate /etc/letsencrypt/live/peilongchencc.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/peilongchencc.com/privkey.pem;
+
+    # 设置允许的 SSL 协议版本
+    ssl_protocols TLSv1.2 TLSv1.3;
+    # 设置加密套件，使用高强度的加密算法
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    root /project/front/webhome;  # 网站根目录
+    index index.html;  # 默认首页文件
+
+    location / {  # 匹配所有请求
+        try_files $uri $uri/ =404;  # 尝试按顺序查找文件或目录，如果都不存在则返回 404 错误
+    }
+}
+```
+ 
+#### 6. 配置软链接到 `sites-enabled`:
+
+软链接类似快捷方式，可以让Nginx更快检索。具体操作如下:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/peilongchencc.cn /etc/nginx/sites-enabled/
+```
+
+#### 7. 检查Nginx配置文件的语法并重载Nginx配置:
+
+```bash
+# 检查配置文件的语法是否正确
+sudo nginx -t
+# 重新加载Nginx配置
+sudo systemctl reload nginx
+```
+
+#### 8. 打开网页测试效果:
+
+Nginx重载后需要一定时间才能生效，稍作等待，打开网页(`https://peilongchencc.cn`)测试效果。如果等待几分钟后，发现还没有效果，试试清理系统缓存，然后重新打开网页。
+
+
+### Nginx示例--通过域名启动前端服务(多域名重定向版本):
+
+假设你想要实现的最终访问效果为: 用户访问 `https://www.peilongchencc.cn`、`https://chatbot.peilongchencc.cn` 都重定向到 `https://peilongchencc.cn`。
+
+#### 通过 Certbot 一次性为这些子域名生成 SSL 证书:
+
+```bash
+# 多个域名共享同一张SSL证书，从而简化管理和部署。
+# 最终访问效果: 用户访问 https://www.peilongchencc.cn、https://chatbot.peilongchencc.cn 都重定向到 https://peilongchencc.cn
+sudo certbot certonly --nginx -d peilongchencc.cn -d www.peilongchencc.cn -d chatbot.peilongchencc.cn
+```
+
+遇到下列信息时，选择 **(E)** 替换现有证书即可。
+
+```log
+(base) root@iZ2ze50qtwy:/etc/nginx/sites-available# sudo certbot certonly --nginx -d peilongchencc.cn -d www.peilongchencc.cn -d chatbot.peilongchencc.cn
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+You have an existing certificate that contains a portion of the domains you
+requested (ref: /etc/letsencrypt/renewal/peilongchencc.cn.conf)
+
+It contains these names: peilongchencc.cn
+
+You requested these names for the new certificate: peilongchencc.cn, www.peilongchencc.cn,
+chatbot.peilongchencc.cn.
+
+Do you want to expand and replace this existing certificate with the new
+certificate?
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+(E)xpand/(C)ancel: 
+```
+
+#### 修改Nginx配置文件:
+
+```bash
+vim /etc/nginx/sites-available/peilongchencc.cn
+```
+
+在配置文件中写入下列内容:
+
+```conf
+server {
+    listen 80;
+    server_name peilongchencc.cn;
+
+    # 将 HTTP 请求重定向到 HTTPS
+    return 301 https://peilongchencc.cn$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name peilongchencc.cn;
+
+    # SSL 证书文件路径
+    ssl_certificate /etc/letsencrypt/live/peilongchencc.cn/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/peilongchencc.cn/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+
+    root /project/front/webhome;
+    index index.html;
+
+    location / {
+        # 如果请求的文件或目录不存在，会返回 404 错误。
+        # 更适合需要严格控制路径的情况，例如 API 请求或仅返回现有文件的静态资源。
+        # 不会对所有请求都指向 index.html，因此减少了不必要的页面加载。
+        try_files $uri $uri/ =404;
+    }
+}
+
+# 配置子域名的 HTTP 重定向
+server {
+    listen 80;
+    server_name www.peilongchencc.cn chatbot.peilongchencc.cn;
+
+    # 将所有 HTTP 请求重定向到 https://peilongchencc.cn/
+    return 301 https://peilongchencc.cn$request_uri;
+}
+
+# 配置子域名的 HTTPS 重定向
+server {
+    listen 443 ssl;
+    server_name www.peilongchencc.cn chatbot.peilongchencc.cn;
+
+    # SSL 证书文件路径
+    ssl_certificate /etc/letsencrypt/live/peilongchencc.cn/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/peilongchencc.cn/privkey.pem;
+
+    # 将所有 HTTPS 请求重定向到 https://peilongchencc.cn/
+    return 301 https://peilongchencc.cn$request_uri;
+}
+```
+
+#### 配置软链接到`sites-enabled`(如果已配置请跳过):
+
+软链接类似快捷方式，可以让Nginx更快检索。具体操作如下:
+
+```bash
+sudo ln -s /etc/nginx/sites-available/peilongchencc.cn /etc/nginx/sites-enabled/
+```
+
+#### 检查Nginx配置文件的语法并重载Nginx配置:
+
+```bash
+# 检查配置文件的语法是否正确
+sudo nginx -t
+# 重新加载Nginx配置
+sudo systemctl reload nginx
+```
+
+#### 打开网页测试多域名重定向效果:
+
+Nginx重载后需要一定时间才能生效，稍作等待，打开网页(`https://peilongchencc.cn`、`https://www.peilongchencc.cn`、`https://chatbot.peilongchencc.cn`)测试效果。如果等待几分钟后，发现还没有效果，试试清理系统缓存，然后重新打开网页。
+
+
+### Nginx示例--Websockets服务配置:
+
+🚨如果你的代码是基于Gradio实现的，Gradio 的 `demo.launch()` 使用 WebSocket 来实现流式响应，而 Nginx 默认不支持 WebSocket，需要专门配置以允许 WebSocket 连接。
 
 💢如果你不在Nginx中添加WebSockets配置，会出现 `ip+port` 访问服务时为流式输出，域名访问时为非流式输出的情况。
 
@@ -308,7 +551,7 @@ openssl s_client -connect peilongchencc.cn:443 -servername peilongchencc.cn
 #### 1. 为个人域名创建Nginx配置文件:
 
 ```bash
-vim /etc/nginx/sites-available/www.peilongchencc.cn
+vim /etc/nginx/sites-available/peilongchencc.cn
 ```
 
 #### 2. 添加配置:
@@ -328,8 +571,8 @@ server {
     server_name peilongchencc.cn www.peilongchencc.cn;  # 定义服务器的域名，允许通过 peilongchencc.cn 和 www.peilongchencc.cn 访问
 
     # SSL 证书配置，用于加密 HTTPS 连接
-    ssl_certificate /etc/letsencrypt/live/www.peilongchencc.cn/fullchain.pem;  # 定义 SSL 证书的完整链路径
-    ssl_certificate_key /etc/letsencrypt/live/www.peilongchencc.cn/privkey.pem;  # 定义 SSL 证书的私钥路径
+    ssl_certificate /etc/letsencrypt/live/peilongchencc.cn/fullchain.pem;  # 定义 SSL 证书的完整链路径
+    ssl_certificate_key /etc/letsencrypt/live/peilongchencc.cn/privkey.pem;  # 定义 SSL 证书的私钥路径
 
     # 配置 WebSocket 代理
     location / {
@@ -361,7 +604,7 @@ server {
 #### 1. 为个人域名创建Nginx配置文件:
 
 ```bash
-vim /etc/nginx/sites-available/www.peilongchencc.cn
+vim /etc/nginx/sites-available/peilongchencc.cn
 ```
 
 #### 2. 添加配置:
@@ -381,8 +624,8 @@ server {
     server_name peilongchencc.cn www.peilongchencc.cn;  # 定义服务器域名，可以通过 peilongchencc.cn 或 www.peilongchencc.cn 访问
 
     # SSL 证书和私钥的路径，Nginx 用于加密 HTTPS 连接
-    ssl_certificate /etc/letsencrypt/live/www.peilongchencc.cn/fullchain.pem;  # SSL 证书的完整链路径
-    ssl_certificate_key /etc/letsencrypt/live/www.peilongchencc.cn/privkey.pem;  # SSL 私钥的路径
+    ssl_certificate /etc/letsencrypt/live/peilongchencc.cn/fullchain.pem;  # SSL 证书的完整链路径
+    ssl_certificate_key /etc/letsencrypt/live/peilongchencc.cn/privkey.pem;  # SSL 私钥的路径
 
     # 其他 SSL 配置可以在这里补充，比如 SSL 协议和密码套件设置...
 
@@ -402,24 +645,15 @@ server {
 软链接类似快捷方式，可以让Nginx更快检索。具体操作如下:
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/www.peilongchencc.cn /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/peilongchencc.cn /etc/nginx/sites-enabled/
 ```
 
-### 检查配置文件的语法并重载Nginx配置:
-
-假定你现在已经按照上述操作将Nginx配置导入了自己的Nginx配置，现在请按照以下步骤执行:
-
-#### 1. 检查配置文件的语法是否正确:
+#### 检查Nginx配置文件的语法并重载Nginx配置:
 
 ```bash
+# 检查配置文件的语法是否正确
 sudo nginx -t
-```
-
-#### 2. 重新加载Nginx配置:
-
-如果没有配置文件的语法正确，重新加载Nginx配置(不关闭 Nginx 的情况使修改后的配置文件生效):
-
-```bash
+# 重新加载Nginx配置
 sudo systemctl reload nginx
 ```
 
@@ -429,7 +663,7 @@ sudo systemctl reload nginx
 https://peilongchencc.cn
 https://www.peilongchencc.cn
 # IP+PORT方式
-https://8.140.203.xxx:8867
+http://8.140.203.xxx:7860
 ```
 
 
@@ -453,10 +687,10 @@ def slow_echo(message, history):
         yield "You typed: " + message[: i+1]
 
 # 允许公网ip、域名方式访问服务，方便前期测试，后期需要关闭。
-# gr.ChatInterface(slow_echo).launch(server_name="0.0.0.0", server_port=8867) # 如果你想要修改端口号，可以使用该示例
+# gr.ChatInterface(slow_echo).launch(server_name="0.0.0.0", server_port=7860) # 如果你想要修改端口号，可以使用该示例
 
 # 只监听本地地址，防止通过IP直接访问
-gr.ChatInterface(slow_echo).launch(server_name="127.0.0.1", server_port=8867)
+gr.ChatInterface(slow_echo).launch(server_name="127.0.0.1", server_port=7860)
 ```
 
 🔥现在用于仅可以通过下列域名的方式访问自己的服务:
@@ -518,6 +752,8 @@ server {
     index index.html;
 
     location / {
+        # 如果请求的文件或目录不存在，则返回 index.html。
+        # 常用于单页应用，所有的未匹配路径都指向 index.html。
         try_files $uri $uri/ /index.html;
     }
 }
