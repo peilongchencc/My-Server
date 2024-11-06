@@ -486,10 +486,7 @@ server {
     index index.html;
 
     location / {
-        # 如果请求的文件或目录不存在，会返回 404 错误。
-        # 更适合需要严格控制路径的情况，例如 API 请求或仅返回现有文件的静态资源。
-        # 不会对所有请求都指向 index.html，因此减少了不必要的页面加载。
-        try_files $uri $uri/ =404;
+        try_files $uri $uri/ /index.html;
     }
 }
 
