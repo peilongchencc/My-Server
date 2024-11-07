@@ -311,10 +311,17 @@ pip install urllib3 requests_toolbelt
 使用 openssl 命令：在服务器上，你可以使用 openssl 命令行工具来检查 SSL 证书。运行以下命令来检查证书：<br>
 
 ```bash
-openssl s_client -connect peilongchencc.cn:443 -servername peilongchencc.cn
+openssl x509 -in /etc/letsencrypt/live/www.peilongchencc.cn/fullchain.pem -text -noout
 ```
 
-这将连接到你的服务器并显示 SSL 证书的详细信息，包括证书链和任何错误。<br>
+这将连接到你的服务器并显示 SSL 证书的详细信息，包括证书链和任何错误。其中 `Validity` 表示证书时间:
+
+```bash
+# 证书的有效期开始时间（2024年9月14日）
+Not Before: Sep 14 02:51:25 2024 GMT
+# 证书的过期时间（2024年12月13日）
+Not After : Dec 13 02:51:24 2024 GMT
+```
 
 
 ## Nginx示例:
