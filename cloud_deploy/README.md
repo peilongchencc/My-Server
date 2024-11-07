@@ -373,12 +373,12 @@ vim /etc/nginx/conf.d/webhome.conf
 
 #### 5. 编辑Nginx配置:
 
-假设你已经为`peilongchencc.com`申请了SSL证书，在上一步的基础上写入下列内容:
+假设你已经为`peilongchencc.cn`申请了SSL证书，在上一步的基础上写入下列内容:
 
 ```conf
 server {
     listen 80;  # 监听 80 端口，处理 HTTP 请求
-    server_name peilongchencc.com;  # 指定服务器域名
+    server_name peilongchencc.cn;  # 指定服务器域名
 
     # 将所有 HTTP 请求重定向到 HTTPS 版本
     return 301 https://$host$request_uri;
@@ -386,11 +386,11 @@ server {
 
 server {
     listen 443 ssl;  # 监听 443 端口，处理 HTTPS 请求
-    server_name peilongchencc.com;  # 指定服务器域名
+    server_name peilongchencc.cn;  # 指定服务器域名
 
     # SSL 证书文件路径
-    ssl_certificate /etc/letsencrypt/live/peilongchencc.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/peilongchencc.com/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/peilongchencc.cn/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/peilongchencc.cn/privkey.pem;
 
     # 设置允许的 SSL 协议版本
     ssl_protocols TLSv1.2 TLSv1.3;
@@ -405,7 +405,14 @@ server {
     }
 }
 ```
- 
+
+如果你想查询某个域名在哪个Nginx配置中，可以使用下列指令:
+
+```bash
+# 例如查找www.peilongchencc.com
+sudo grep -r "www.peilongchencc.com" /etc/nginx/
+```
+
 #### 6. 配置软链接到 `sites-enabled`:
 
 软链接类似快捷方式，可以让Nginx更快检索。具体操作如下:
