@@ -181,6 +181,30 @@ https://help.aliyun.com/zh/icp-filing/basic-icp-service/user-guide/for-the-first
 
 域名配置好、生效后，必须为域名添加SSL证书，才能实现HTTPS访问。
 
+补充--查看所有管理的证书及其有效期的命令：
+
+```bash
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong# sudo certbot certificates
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Found the following certs:
+  Certificate Name: aistar.com
+    Serial Number: 6102390dd3573785cc9ea160d8accd715ea
+    Key Type: ECDSA
+    Domains: aistar.com aitalk.aistar.com chat.aistar.com www.aistar.com
+    Expiry Date: 2025-07-08 15:33:32+00:00 (VALID: 78 days)
+    Certificate Path: /etc/letsencrypt/live/aistar.com/fullchain.pem
+    Private Key Path: /etc/letsencrypt/live/aistar.com/privkey.pem
+  Certificate Name: bankchatbot.aistar.com
+    Serial Number: 57cbe818da5a055b7eca7611341f373389f
+    Key Type: RSA
+    Domains: bankchatbot.aistar.com
+    Expiry Date: 2025-07-07 14:34:59+00:00 (VALID: 77 days)
+    Certificate Path: /etc/letsencrypt/live/bankchatbot.aistar.com/fullchain.pem
+    Private Key Path: /etc/letsencrypt/live/bankchatbot.aistar.com/privkey.pem
+```
+
 ### 1. 安装 Certbot 和 Nginx 插件:
 
 ```bash
