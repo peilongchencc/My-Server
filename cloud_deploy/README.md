@@ -22,6 +22,7 @@
     - [详细的操作示例如下:](#详细的操作示例如下)
       - [解决方案:](#解决方案)
     - [Certbot 写入 Nginx 的操作含义(可跳过)：](#certbot-写入-nginx-的操作含义可跳过)
+    - [更新Certbot管理的证书:](#更新certbot管理的证书)
     - [验证SSL证书是否有效(可选):](#验证ssl证书是否有效可选)
   - [Nginx示例:](#nginx示例)
     - [Nginx示例--通过域名启动前端服务:](#nginx示例--通过域名启动前端服务)
@@ -329,6 +330,20 @@ pip install urllib3 requests_toolbelt
 **以上工作不包括与后端服务的绑定**，Certbot 的工作仅限于 SSL 证书的生成和 Nginx 的 HTTPS 配置。
 
 如果想要将域名和后端服务绑定，还需要手动修改 Nginx 的配置文件来将你的域名（`www.peilongchencc.cn`）请求转发到后端服务。🔥
+
+### 更新Certbot管理的证书:
+
+查看Certbot管理的证书信息，包括到期时间和剩余天数：
+
+```bash
+sudo certbot certificates
+```
+
+更新Certbot管理的证书(只有到期前30天才会更新):
+
+```bash
+sudo certbot renew --dry-run
+```
 
 ### 验证SSL证书是否有效(可选):
 
