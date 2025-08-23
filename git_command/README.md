@@ -19,6 +19,10 @@
     - [删除分支：](#删除分支)
       - [删除本地分支:](#删除本地分支)
       - [删除远程分支:](#删除远程分支)
+    - [另辟分支-git stash:](#另辟分支-git-stash)
+      - [1. 带描述保存最近一次提交后的修改](#1-带描述保存最近一次提交后的修改)
+      - [2. 切换到新分支](#2-切换到新分支)
+      - [3. 提交到远程仓库](#3-提交到远程仓库)
   - [文件忽略".gitignore"](#文件忽略gitignore)
   - [Git操作常见流程：](#git操作常见流程)
   - [版本回退:](#版本回退)
@@ -564,7 +568,70 @@ git push origin --delete branch_b
 请注意，删除远程分支需要相应的权限，如果你没有权限删除远程分支，需要联系仓库的管理员或拥有者进行操作。<br>
 
 最终，通过执行上述步骤，你将删除本地分支和远程分支中的`branch_b`分支。请谨慎操作，因为删除分支可能会导致数据丢失。<br>
-<br>
+
+### 另辟分支-git stash:
+
+`git stash` 的作用是临时保存当前工作区的修改，并恢复到一个干净的工作状态（通常是最近一次提交的状态）。具体使用步骤如下:
+
+
+#### 1. 带描述保存最近一次提交后的修改
+
+```bash
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong/webrtc# git stash save "修复音频卡顿问题"
+Saved working directory and index state On dev: 修复音频卡顿问题
+```
+
+#### 2. 切换到新分支
+
+此时会在原分支的基础上，创建一个新分支，并带着改动切换到新分支。
+
+```bash
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong/webrtc# git stash branch bug_fix
+Switched to a new branch 'bug_fix'
+On branch bug_fix
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   src/main/java/com/zxqm/platform/webrtc/handler/AudioReceiveThread.java
+        modified:   src/main/java/com/zxqm/platform/webrtc/handler/AudioSendThread.java
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (973856d546a41ce68338be215dc798bd15a7fb04)
+```
+
+上述信息表示，在`bug_fix`分支上，有2个文件被修改，但未提交。并提示我们使用`git add`和`git commit`来提交。
+
+最后的`Dropped refs/stash@{0} (973856d...)`表示，我们保存的修改被丢弃了。这是正常行为，`git stash branch` 用完 `stash` 后会自动清除。
+
+#### 3. 提交到远程仓库
+
+```bash
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong/webrtc# git add .
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong/webrtc# git commit -m "修复音频卡顿问题"
+[bug_fix 2ac94c7] 修复音频卡顿问题
+ 2 files changed, 60 insertions(+), 16 deletions(-)
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong/webrtc# git push
+fatal: The current branch bug_fix has no upstream branch.
+To push the current branch and set the remote as upstream, use
+
+    git push --set-upstream origin bug_fix
+
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong/webrtc# git push --set-upstream origin bug_fix
+Enumerating objects: 23, done.
+Counting objects: 100% (23/23), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (8/8), done.
+Writing objects: 100% (12/12), 2.22 KiB | 2.22 MiB/s, done.
+Total 12 (delta 5), reused 0 (delta 0), pack-reused 0
+remote: 
+remote: To create a merge request for bug_fix, visit:
+remote:   https://jihulab.com/ai2390227/algorithm/webrtc/-/merge_requests/new?merge_request%5Bsource_branch%5D=bug_fix
+remote: 
+To jihulab.com:ai2390227/algorithm/webrtc.git
+ * [new branch]      bug_fix -> bug_fix
+Branch 'bug_fix' set up to track remote branch 'bug_fix' from 'origin'.
+(base) root@iZ2ze50qtwycx9:/project/chenpeilong/webrt
+```
 
 
 ## 文件忽略".gitignore"
