@@ -6,6 +6,8 @@
 
 ## 核心代码:
 
+创建 `deploy.sh` 文件，写入以下代码:
+
 ```bash
 #!/bin/bash
 
