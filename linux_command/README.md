@@ -16,6 +16,7 @@ Ps:本文所有指令为 Linux 版本，Windows 或 MacOS 指令请自行从网�
     - [查看自己电脑的硬盘空间:](#查看自己电脑的硬盘空间)
   - [清理磁盘空间:](#清理磁盘空间)
     - [查看自己电脑的系统内存:](#查看自己电脑的系统内存)
+  - [查看运行内存占比最高的10个文件:](#查看运行内存占比最高的10个文件)
   - [CPU 和 GPU 相关：](#cpu-和-gpu-相关)
     - [`nvcc -V` 是什么意思？和 `nvidia-smi` 有什么区别？](#nvcc--v-是什么意思和-nvidia-smi-有什么区别)
     - [同一台服务器下，为什么CUDA的版本不同，`nvidia-smi`显示的是`12.0`，`nvcc -V`显示的是`11.7`:](#同一台服务器下为什么cuda的版本不同nvidia-smi显示的是120nvcc--v显示的是117)
@@ -422,8 +423,91 @@ free -h
 `top` 是一个强大的工具，可以帮助你实时地监视系统性能，了解哪些进程在消耗资源，以及系统的负载情况。它对于诊断性能问题和资源管理非常有用。
 
 
+## 查看运行内存占比最高的10个文件:
+
+shell脚本如下:
+
+```bash
+#!/bin/bash
+echo "========================================"
+echo "系统内存使用情况 ($(date))"
+echo "========================================"
+echo ""
+
+echo "📊 总体内存状况:"
+free -h
+echo ""
+
+echo "🔍 内存占用前10的进程:"
+echo "PID       用户    内存%   内存(MB)  服务名称"
+echo "----------------------------------------"
+ps aux --sort=-%mem | head -11 | tail -10 | while read line; do
+    PID=$(echo $line | awk '{print $2}')
+    USER=$(echo $line | awk '{print $1}')
+    MEM_PERCENT=$(echo $line | awk '{print $4}')
+    MEM_MB=$(echo $line | awk '{printf "%.0f", $6/1024}')
+    FULL_CMD=$(echo $line | cut -d' ' -f11-)
+    
+    # 提取服务名称
+    if [[ $FULL_CMD == *".jar"* ]]; then
+        # Java服务：提取jar文件名（去掉路径和版本号）
+        SERVICE_NAME=$(echo $FULL_CMD | grep -o '[^/]*\.jar' | head -1)
+        # 如果有环境标识，一并显示
+        if [[ $FULL_CMD == *"prod"* ]]; then
+            ENV_INFO=$(echo $FULL_CMD | grep -o 'prod[0-9]*' | head -1)
+            SERVICE_NAME="$SERVICE_NAME ($ENV_INFO)"
+        elif [[ $FULL_CMD == *"test"* ]]; then
+            ENV_INFO=$(echo $FULL_CMD | grep -o 'test[0-9]*' | head -1)
+            SERVICE_NAME="$SERVICE_NAME ($ENV_INFO)"
+        fi
+    elif [[ $FULL_CMD == *"mysqld"* ]]; then
+        SERVICE_NAME="mysqld"
+    elif [[ $FULL_CMD == *"cursor-server"* ]]; then
+        if [[ $FULL_CMD == *"cursorpyright"* ]]; then
+            SERVICE_NAME="cursor-pyright"
+        elif [[ $FULL_CMD == *"extensionHost"* ]]; then
+            SERVICE_NAME="cursor-extension"
+        else
+            SERVICE_NAME="cursor-server"
+        fi
+    elif [[ $FULL_CMD == *"gnome-shell"* ]]; then
+        SERVICE_NAME="gnome-shell"
+    else
+        # 其他进程：显示程序名
+        SERVICE_NAME=$(echo $FULL_CMD | awk '{print $1}' | xargs basename)
+    fi
+    
+    printf "%-8s  %-8s %-6s  %-8s  %s\n" "$PID" "$USER" "$MEM_PERCENT" "$MEM_MB" "$SERVICE_NAME"
+done
+echo ""
+
+echo "💡 总结:"
+TOTAL_MEM=$(free -m | awk 'NR==2{printf "%.0f", $3/$2*100}')
+echo "当前内存使用率: ${TOTAL_MEM}%"
+if [ $TOTAL_MEM -gt 80 ]; then
+    echo "⚠️  内存使用率较高，建议进行优化"
+else
+    echo "✅ 内存使用正常"
+fi
+```
+
+赋予文件权限并运行:
+
+```bash
+chmod +x ./memory_check.sh && ./memory_check.sh
+```
+
+也可使用以下指令查询:
+
+```bash
+ps aux --sort=-%mem | head -11 | tail -10
+```
+
+
 ## CPU 和 GPU 相关：
+
 查看cpu详细信息：
+
 ```bash
 lscpu 
 ```
