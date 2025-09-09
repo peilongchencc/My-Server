@@ -17,6 +17,7 @@ Ps:本文所有指令为 Linux 版本，Windows 或 MacOS 指令请自行从网�
   - [清理磁盘空间:](#清理磁盘空间)
     - [查看自己电脑的系统内存:](#查看自己电脑的系统内存)
   - [查看运行内存占比最高的10个文件:](#查看运行内存占比最高的10个文件)
+  - [查看CLOSE\_WAIT连接:](#查看close_wait连接)
   - [CPU 和 GPU 相关：](#cpu-和-gpu-相关)
     - [`nvcc -V` 是什么意思？和 `nvidia-smi` 有什么区别？](#nvcc--v-是什么意思和-nvidia-smi-有什么区别)
     - [同一台服务器下，为什么CUDA的版本不同，`nvidia-smi`显示的是`12.0`，`nvcc -V`显示的是`11.7`:](#同一台服务器下为什么cuda的版本不同nvidia-smi显示的是120nvcc--v显示的是117)
@@ -503,6 +504,18 @@ chmod +x ./memory_check.sh && ./memory_check.sh
 ps aux --sort=-%mem | head -11 | tail -10
 ```
 
+## 查看CLOSE_WAIT连接:
+
+```bash
+# 查看CLOSE_WAIT连接
+netstat -anp | grep CLOSE_WAIT
+
+# 根据PID查看对应的服务(下列指令中 2408442 是PID，多个PID用逗号分隔，例如 2969595,3414075)
+ps -p 2969595 -o pid,ppid,user,start,time,command
+
+# 查看进程ID(PID)对应的工作目录，多个PID用逗号分隔，例如 2969595,3414075
+pwdx 2969595
+```
 
 ## CPU 和 GPU 相关：
 
