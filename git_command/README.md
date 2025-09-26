@@ -753,6 +753,16 @@ git push
 chmod +x ./push_commit_to_git.sh
 ```
 
+## 恢复到最近一次提交:
+
+将当前工作目录中的所有文件恢复到最近一次提交（或暂存区）的状态:
+
+```bash
+git restore .
+```
+
+应用场景: 如果你修改了文件但还没有执行 `git add`，执行 `git restore .` 会丢弃这些修改。
+
 
 ## 版本回退:
 
